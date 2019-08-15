@@ -1,4 +1,4 @@
-<img src="assets/logo.gif" alt="tOne AIlogo" title="Environmental Audio Recognition System" align="right" />
+<img src="assets/logo.png" alt="EARS logo" title="Environmental Audio Recognition System" align="right" />
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
