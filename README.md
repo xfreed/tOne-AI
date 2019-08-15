@@ -2,9 +2,9 @@
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## EARS: Environmental Audio Recognition System
+## tOne AI system
 
-**EARS** is a proof of concept implementation of a ***convolutional neural network*** for **live environmental audio processing & recognition** on low-power [*SoC*](https://en.wikipedia.org/wiki/System_on_a_chip) devices (at this time it has been developed and tested on a ***Raspberry Pi 3 Model B***).
+**tOne AI** is a proof of concept implementation of a ***convolutional neural network*** for **live environmental audio processing & recognition** on low-power [*SoC*](https://en.wikipedia.org/wiki/System_on_a_chip) devices (at this time it has been developed and tested on a ***Raspberry Pi 3 Model B***).
 
 EARS features a background thread for **audio capture & classification** and a [Bokeh](https://github.com/bokeh/bokeh/) server based dashboard providing **live visualization** and **audio streaming** from the device to the browser.
 
@@ -16,9 +16,6 @@ The live audio stream can get choppy or out-of-sync, especially when using the m
 
 Actual production deployments would profit from a server-node architecture where SoC devices are only pushing predictions, status updates and audio feeds to a central server handling all end user interaction, material browsing and visualization. This may be implemented in future versions, but no promises here.
 
-## Quick look
-
-![Demo of EARS: Environmental Audio Recognition System](assets/EARS-demo.gif)
 
 ## Installation
 
@@ -116,10 +113,7 @@ File                | Description
 
 If you want to train a completely different model, then you can have a look at [`train.py`](ears/train.py). In this case you probably know what to do either way.
 
-## Photos from my development field:
-
-![EARS on Raspberry Pi + Zoom H1](assets/ears-deployment-photo.gif) ![EARS on Raspberry Pi + Zoom H1](assets/ears-deployment-photo-2.gif)
 
 ## License
 
-MIT © Karol J. Piczak
+MIT © Mykhailo Kunynets
