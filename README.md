@@ -76,7 +76,7 @@ sudo apt-get install portaudio19-dev
 pip install -r /home/pi/ears/requirements.txt
 ```
 
-- Plug a *Zoom H1* microphone into the USB port (or some other audio device, but that's the one I used for initial testing), switch it into an audio interface mode (44.1 kHz/16 bit), and verify it's listed by `python -m sounddevice`.
+- Plug a microphone into the USB port (or some other audio device, but that's the one I used for initial testing), switch it into an audio interface mode (44.1 kHz/16 bit), and verify it's listed by `python -m sounddevice`.
 - Update the `--allow-websocket-origin` option inside `/home/pi/ears/run.sh` file with the IP address of the Raspberry Pi device.
 - Finally, run the app with:
 
@@ -90,7 +90,6 @@ cd /home/pi/ears
 
 ## Training new models
 
-For the time being, EARS comes preloaded with a very rudimentary model trained on the [**ESC-50 dataset**](https://github.com/karoldvl/ESC-50) (convnet consisting of 3 layers, 3x3 square filters), so it's recognition capabilities are limited for actual live scenarios.
 
 If you want to train the same model on a different dataset:
 - Download the source code to a workstation/server with a GPU card.
