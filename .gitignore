@@ -4,5 +4,6 @@
 
 /ears/dataset/audio
 /ears/dataset/tmp
-/ears/env
+/env
+.vs
 __pycache__
