@@ -370,6 +370,6 @@ grid = column(
     row(filler2, Button(label='Mute', callback=live_audio_callback, name='mute_button'))
 )
 
-curdoc().title = 'EARS: Environmental Audio Recognition System'
+curdoc().title = 'tOne AI '
 curdoc().add_root(grid)
 curdoc().add_periodic_callback(update, 100)
