@@ -48,7 +48,6 @@
         "bias_initializer": {
           "class_name": "Zeros",
           "config": {
-
           }
         },
         "batch_input_shape": [
@@ -129,7 +128,6 @@
         "bias_initializer": {
           "class_name": "Zeros",
           "config": {
-
           }
         },
         "trainable": true
@@ -204,7 +202,6 @@
         "bias_initializer": {
           "class_name": "Zeros",
           "config": {
-
           }
         },
         "trainable": true
@@ -280,7 +277,6 @@
         "bias_initializer": {
           "class_name": "Zeros",
           "config": {
-
           }
         },
         "trainable": true

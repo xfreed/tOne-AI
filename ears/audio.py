@@ -13,7 +13,6 @@ import sounddevice as sd
 
 from config import *
 
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 

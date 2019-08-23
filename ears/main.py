@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import json
-import numpy as np
 
+import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, widgetbox
-from bokeh.models import Button, Div, FixedTicker, FuncTickFormatter, HoverTool, Slider
+from bokeh.models import (Button, Div, FixedTicker, FuncTickFormatter,
+                          HoverTool, Slider)
 from bokeh.models.callbacks import CustomJS
 from bokeh.models.mappers import LinearColorMapper
 from bokeh.palettes import Viridis256
@@ -13,7 +14,6 @@ from bokeh.plotting import ColumnDataSource, figure
 
 import audio
 from config import *
-
 
 with open('ears/model_labels.json', 'r') as labels_file:
     labels = json.load(labels_file)

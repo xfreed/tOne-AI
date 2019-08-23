@@ -6,11 +6,19 @@ import os
 import time
 import warnings
 
+import keras
 import librosa
 import numpy as np
 import pandas as pd
-import pydub
 import sklearn.preprocessing
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.convolutional import Conv2D as Conv
+from keras.layers.convolutional import MaxPooling2D as Pool
+from keras.layers.core import Activation, Dense, Dropout, Flatten
+from keras.regularizers import l2 as L2
+
+import pydub
+from config import *
 from tqdm import tqdm
 
 THEANO_FLAGS = ('device=gpu0,'
@@ -21,16 +29,9 @@ THEANO_FLAGS = ('device=gpu0,'
 os.environ['THEANO_FLAGS'] = THEANO_FLAGS
 os.environ['KERAS_BACKEND'] = 'theano'
 
-import keras
 keras.backend.set_image_dim_ordering('th')
-from keras.layers.convolutional import Conv2D as Conv
-from keras.layers.convolutional import MaxPooling2D as Pool
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.core import Activation, Dense, Dropout, Flatten
-from keras.regularizers import l2 as L2
 
 
-from config import *
 
 
 def to_one_hot(targets, class_count):
