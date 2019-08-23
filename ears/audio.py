@@ -14,10 +14,10 @@ import sounddevice as sd
 from config import *
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 with open('ears/model_labels.json', 'r') as labels_file:
-    labels = json.load(labels_file)
+    LABELS = json.load(labels_file)
 
 
 signal = np.zeros((AUDIO_DURATION * SAMPLING_RATE, 1), dtype='float32')
@@ -25,7 +25,7 @@ spectrogram = np.zeros((MEL_BANDS, AUDIO_DURATION * SAMPLING_RATE // CHUNK_SIZE)
 audio_queue = collections.deque(maxlen=1000)  # Queue for incoming audio blocks
 last_chunk = np.zeros((CHUNK_SIZE, 1), dtype='float32')  # Short term memory for the next step
 
-predictions = np.zeros((len(labels), AUDIO_DURATION * SAMPLING_RATE // (BLOCK_SIZE * PREDICTION_STEP)), dtype='float32')
+predictions = np.zeros((len(LABELS), AUDIO_DURATION * SAMPLING_RATE // (BLOCK_SIZE * PREDICTION_STEP)), dtype='float32')
 live_audio_feed = collections.deque(maxlen=1)
 
 model = None
@@ -56,7 +56,7 @@ def capture_audio(block, block_len, time, status):
 
 def start():
     # Import classifier model
-    logger.info('Initializing a convolutional neural network model...')
+    LOGGER.info('Initializing a convolutional neural network model...')
     global model
 
     THEANO_FLAGS = ('device=cpu,'
@@ -75,11 +75,11 @@ def start():
         model = keras.models.model_from_json(cfg)
 
     model.load_weights('ears/model.h5')
-    logger.debug('Loaded Keras model with weights.')
+    LOGGER.debug('Loaded Keras model with weights.')
 
     # Start audio capture
     sd.default.device = AUDIO_DEVICE
-    logger.info('Priming recording device {}.'.format(AUDIO_DEVICE))
+    LOGGER.info('Priming recording device {}.'.format(AUDIO_DEVICE))
 
     stream = sd.InputStream(channels=1, dtype='float32', callback=capture_audio,
                             samplerate=SAMPLING_RATE, blocksize=BLOCK_SIZE)
@@ -132,7 +132,7 @@ def start():
                 np.stack([spectrogram[:, -SEGMENT_LENGTH:]]),
             ])
             predictions[:, -1] = pred
-            target = labels[np.argmax(pred)]
+            target = LABELS[np.argmax(pred)]
 
             # Clean up
             last_chunk[:] = step_audio[-CHUNK_SIZE:]
@@ -143,17 +143,17 @@ def start():
             blocks_in_ms = int(PREDICTION_STEP * BLOCK_SIZE / SAMPLING_RATE * 1000)
             msg = '[{}] {}% = {} ms / {} ms ({} blocks) - temp: {} | freq: {} ==> {}'
             timestamp = time.strftime('%H:%M:%S')
-            logger.debug(msg.format(timestamp, np.round(time_spent / blocks_in_ms * 100, 1),
+            LOGGER.debug(msg.format(timestamp, np.round(time_spent / blocks_in_ms * 100, 1),
                                     time_spent, blocks_in_ms, PREDICTION_STEP, temp, freq, target))
 
         time.sleep(0.05)
 
 
 def classify(segments):
-    X = np.stack(segments)
-    X -= AUDIO_MEAN
-    X /= AUDIO_STD
-    pred = model.predict(X)
+    x = np.stack(segments)
+    x -= AUDIO_MEAN
+    x /= AUDIO_STD
+    pred = model.predict(x)
     pred = np.average(pred, axis=0, weights=np.arange(len(pred)) + 1)
 
     return pred

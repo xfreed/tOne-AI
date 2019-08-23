@@ -1,16 +1,18 @@
-# -*- coding: utf-8 -*-
-
+"""
+-*- coding: utf-8 -*-
+"""
 import json
 import logging
 import os
-import time
+#import time
 import warnings
 
-import keras
+
 import librosa
 import numpy as np
 import pandas as pd
 import sklearn.preprocessing
+import keras
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import Conv2D as Conv
 from keras.layers.convolutional import MaxPooling2D as Pool
@@ -18,8 +20,8 @@ from keras.layers.core import Activation, Dense, Dropout, Flatten
 from keras.regularizers import l2 as L2
 
 import pydub
-from config import *
 from tqdm import tqdm
+from config import *
 
 THEANO_FLAGS = ('device=gpu0,'
                 'floatX=float32,'
@@ -38,10 +40,11 @@ def to_one_hot(targets, class_count):
     """Encode target classes in a one-hot matrix.
     """
     one_hot_enc = np.zeros((len(targets), class_count))
-
-    for r in range(len(targets)):
-        one_hot_enc[r, targets[r]] = 1
-
+    #   HERE IS NEW CODE
+    #for r in range(len(targets)):
+    #    one_hot_enc[r, targets[r]] = 1
+    for value in targets:
+        one_hot_enc[value, targets[value]] = 1
     return one_hot_enc
 
 
@@ -70,48 +73,48 @@ def iterbatches(batch_size, training_dataframe):
     itrain = iterrows(training_dataframe)
 
     while True:
-        X, y = [], []
+        x, y = [], []
 
         for i in range(batch_size):
             row = next(itrain)
-            X.append(extract_segment(row.filename))
-            y.append(le.transform([row.category])[0])
+            x.append(extract_segment(row.filename))
+            y.append(LE.transform([row.category])[0])
 
-        X = np.stack(X)
-        y = to_one_hot(np.array(y), len(labels))
+        x = np.stack(x)
+        y = to_one_hot(np.array(y), len(LABELS))
 
-        X -= AUDIO_MEAN
-        X /= AUDIO_STD
+        x -= AUDIO_MEAN
+        x /= AUDIO_STD
 
-        yield X, y
+        yield x, y
 
 
 if __name__ == '__main__':
     np.random.seed(1)
 
     logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
+    LOGGER = logging.getLogger(__name__)
 
     # Load dataset
-    meta = pd.read_csv('dataset/dataset.csv')
-    labels = pd.unique(meta.sort_values('category')['category'])
-    le = sklearn.preprocessing.LabelEncoder()
-    le.fit(labels)
+    META = pd.read_csv('dataset/dataset.csv')
+    LABELS = pd.unique(META.sort_values('category')['category'])
+    LE = sklearn.preprocessing.LabelEncoder()
+    LE.fit(LABELS)
 
     # Generate spectrograms
-    logger.info('Generating spectrograms...')
+    LOGGER.info('Generating spectrograms...')
 
     if not os.path.exists('dataset/tmp/'):
         os.mkdir('dataset/tmp/')
 
-    for row in tqdm(meta.itertuples(), total=len(meta)):
+    for row in tqdm(META.itertuples(), total=len(META)):
         spec_file = 'dataset/tmp/' + row.filename + '.spec.npy'
         audio_file = 'dataset/audio/' + row.filename
 
         if os.path.exists(spec_file):
             continue
 
-        audio = pydub.AudioSegment.from_file(audio_file).set_frame_rate(SAMPLING_RATE).set_channels(1)
+        audio = pydub.AudioSegment.from_file(audio_file).set_frame_rate(SAMPLING_RATE).set_channels(1)# pylint: disable=line-too-long
         audio = (np.fromstring(audio._data, dtype="int16") + 0.5) / (0x7FFF + 0.5)
 
         spec = librosa.feature.melspectrogram(audio, SAMPLING_RATE, n_fft=FFT_SIZE,
@@ -125,51 +128,52 @@ if __name__ == '__main__':
         np.save(spec_file, spec.astype('float16'), allow_pickle=False)
 
     # Define model
-    logger.info('Constructing model...')
+    LOGGER.info('Constructing model...')
 
-    input_shape = 1, MEL_BANDS, SEGMENT_LENGTH
+    INPUT_SHAPE = 1, MEL_BANDS, SEGMENT_LENGTH
 
-    model = keras.models.Sequential()
+    MODEL = keras.models.Sequential()
 
-    model.add(Conv(80, (3, 3), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform',
-                   input_shape=input_shape))
-    model.add(LeakyReLU())
-    model.add(Pool((3, 3), (3, 3)))
+    MODEL.add(Conv(80, (3, 3), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform',
+                   INPUT_SHAPE=INPUT_SHAPE))
+    MODEL.add(LeakyReLU())
+    MODEL.add(Pool((3, 3), (3, 3)))
 
-    model.add(Conv(160, (3, 3), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform'))
-    model.add(LeakyReLU())
-    model.add(Pool((3, 3), (3, 3)))
+    MODEL.add(Conv(160, (3, 3), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform'))
+    MODEL.add(LeakyReLU())
+    MODEL.add(Pool((3, 3), (3, 3)))
 
-    model.add(Conv(240, (3, 3), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform'))
-    model.add(LeakyReLU())
-    model.add(Pool((3, 3), (3, 3)))
+    MODEL.add(Conv(240, (3, 3), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform'))
+    MODEL.add(LeakyReLU())
+    MODEL.add(Pool((3, 3), (3, 3)))
 
-    model.add(Flatten())
-    model.add(Dropout(0.5))
+    MODEL.add(Flatten())
+    MODEL.add(Dropout(0.5))
 
-    model.add(Dense(len(labels), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform'))
-    model.add(Activation('softmax'))
+    MODEL.add(Dense(len(LABELS), kernel_regularizer=L2(0.001), kernel_initializer='he_uniform'))
+    MODEL.add(Activation('softmax'))
 
-    optimizer = keras.optimizers.SGD(lr=0.001, momentum=0.9, nesterov=True)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    OPTIMIZER = keras.optimizers.SGD(lr=0.001, momentum=0.9, nesterov=True)
+    MODEL.compile(loss='categorical_crossentropy', OPTIMIZER=OPTIMIZER, metrics=['accuracy'])
 
     # Train model
-    batch_size = 100
+    BATCH_SIZE = 100
     EPOCH_MULTIPLIER = 10
-    epochs = 1000 // EPOCH_MULTIPLIER
-    epoch_size = len(meta) * EPOCH_MULTIPLIER
-    bpe = epoch_size // batch_size
+    EPOCHS = 1000 // EPOCH_MULTIPLIER
+    EPOCH_SIZE = len(META) * EPOCH_MULTIPLIER
+    BPE = EPOCH_SIZE // BATCH_SIZE
 
-    logger.info('Training... (batch size of {} | {} batches per epoch)'.format(batch_size, bpe))
+    #LOGGER.info('Training... (batch size of {} | {} batches per epoch)'.format(BATCH_SIZE, BPE))
+    LOGGER.info('Training... (batch size of %s| %sbatches per epoch)', BATCH_SIZE, BPE)
 
-    model.fit_generator(generator=iterbatches(batch_size, meta),
-                        steps_per_epoch=bpe,
-                        epochs=epochs)
+    MODEL.fit_generator(generator=iterbatches(BATCH_SIZE, META),
+                        steps_per_epoch=BPE,
+                        EPOCHS=EPOCHS)
 
     with open('model.json', 'w') as file:
-        file.write(model.to_json())
+        file.write(MODEL.to_json())
 
-    model.save_weights('model.h5')
+    MODEL.save_weights('model.h5')
 
     with open('model_labels.json', 'w') as file:
-        json.dump(le.classes_.tolist(), file)
+        json.dump(LE.classes_.tolist(), file)

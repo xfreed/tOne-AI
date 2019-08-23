@@ -9,21 +9,21 @@ from bokeh.models import (Button, Div, FixedTicker, FuncTickFormatter,
                           HoverTool, Slider)
 from bokeh.models.callbacks import CustomJS
 from bokeh.models.mappers import LinearColorMapper
-from bokeh.palettes import Viridis256
+from bokeh.palettes import Viridis256 
 from bokeh.plotting import ColumnDataSource, figure
 
 import audio
 from config import *
 
 with open('ears/model_labels.json', 'r') as labels_file:
-    labels = json.load(labels_file)
+    LABELS = json.load(labels_file)
 
 PALETTE = Viridis256
 PALETTE_DEFAULT_THRESHOLD = 0.5
 SPEC_PALETTE = Viridis256
 
 WIDTHS = [500, 100]
-HEIGHTS = [200, 50 + 11 * len(labels)]
+HEIGHTS = [200, 50 + 11 * len(LABELS)]
 GRID_COLOR = '#eeeeee'
 TEXT_COLOR = '#555555'
 TEXT_FONT = 'Signika'
@@ -101,18 +101,18 @@ def plot_spectrogram():
     plt.image('value', x=0, y=0, dw=SPEC_WIDTH, dh=SPEC_HEIGHT, name='spectrogram',
               color_mapper=LinearColorMapper(SPEC_PALETTE, low=0, high=100), source=SPECTROGRAM)
 
-    # X ticks
+    # x ticks
     plt.xaxis[0].ticker = FixedTicker(ticks=[])
 
-    # X axis
+    # x axis
     plt.xaxis.axis_line_color = None
 
-    # Y ticks
+    # y ticks
     plt.yaxis[0].ticker = FixedTicker(ticks=[])
     plt.yaxis.major_label_text_font_size = '0pt'
     plt.yaxis.major_tick_line_color = None
 
-    # Y axis
+    # y axis
     plt.yaxis.axis_line_color = None
     plt.yaxis.axis_label = 'Mel bands'
     plt.yaxis.axis_label_text_font = TEXT_FONT
@@ -141,11 +141,11 @@ def plot_detection_history():
 
     plt = figure(plot_width=WIDTHS[0], plot_height=HEIGHTS[1],
                  toolbar_location=None, tools="hover",
-                 x_range=[-cols, 0], y_range=labels[::-1])
+                 x_range=[-cols, 0], y_range=LABELS[::-1])
 
     plt.rect(x='x', y='y', width=0.95, height=0.8, color='color', source=HISTORY)
 
-    # X ticks
+    # x ticks
     plt.xaxis[0].ticker = FixedTicker(ticks=np.arange(-cols, 1, 1).tolist())
     plt.xaxis[0].formatter = FuncTickFormatter(code="""
         return (tick * {} / 1000).toFixed(1) + " s"
@@ -155,16 +155,16 @@ def plot_detection_history():
     plt.xaxis.major_label_text_font = TEXT_FONT
     plt.xaxis.major_label_text_color = TEXT_COLOR
 
-    # X axis
+    # x axis
     plt.xaxis.axis_line_color = None
 
-    # Y ticks
+    # y ticks
     plt.yaxis.major_tick_line_color = None
     plt.yaxis.major_label_text_font_size = '7pt'
     plt.yaxis.major_label_text_font = TEXT_FONT
     plt.yaxis.major_label_text_color = TEXT_COLOR
 
-    # Y axis
+    # y axis
     plt.yaxis.axis_line_color = GRID_COLOR
 
     # Grid
@@ -198,31 +198,31 @@ def plot_detection_last():
     # Horizontal bars with current probabilities
     plt = figure(plot_width=WIDTHS[1], plot_height=HEIGHTS[1],
                  toolbar_location=None, tools='hover',
-                 x_range=[0., 1.], y_range=labels[::-1])
+                 x_range=[0., 1.], y_range=LABELS[::-1])
 
     plt.hbar(y='pos', height=0.9, left=0, right='value', color='color', source=DETECTION,
              name='bars', line_color=None)
 
     # Threshold annotation
-    plt.quad(left=-0.1, right='threshold', bottom=-0.1, top=len(labels) + 1, source=THRESHOLD,
+    plt.quad(left=-0.1, right='threshold', bottom=-0.1, top=len(LABELS) + 1, source=THRESHOLD,
              fill_color='#000000', fill_alpha=0.1, line_color='red', line_dash='dashed')
 
-    # X ticks
+    # x ticks
     plt.xaxis[0].ticker = FixedTicker(ticks=[0, 1])
     plt.xaxis.major_tick_line_color = GRID_COLOR
     plt.xaxis.major_label_text_font_size = '7pt'
     plt.xaxis.major_label_text_font = TEXT_FONT
     plt.xaxis.major_label_text_color = TEXT_COLOR
 
-    # X axis
+    # x axis
     plt.xaxis.axis_line_color = None
 
-    # Y ticks
-    plt.yaxis[0].ticker = FixedTicker(ticks=np.arange(1, len(labels) + 1, 1).tolist())
+    # y ticks
+    plt.yaxis[0].ticker = FixedTicker(ticks=np.arange(1, len(LABELS) + 1, 1).tolist())
     plt.yaxis.major_label_text_font_size = '0pt'
     plt.yaxis.major_tick_line_color = None
 
-    # Y axis
+    # y axis
     plt.yaxis.axis_line_color = GRID_COLOR
 
     # Grid
@@ -230,7 +230,7 @@ def plot_detection_last():
     plt.ygrid.grid_line_color = None
 
     # Band fill
-    plt.hbar(y=np.arange(1, len(labels) + 1, 2), height=1., left=0, right=1., color='#000000',
+    plt.hbar(y=np.arange(1, len(LABELS) + 1, 2), height=1., left=0, right=1., color='#000000',
              alpha=0.1, level='image', name='bands')
 
     # Plot fill/border
@@ -260,7 +260,7 @@ def update():
         spectrogram = audio.spectrogram.copy()
         predictions = audio.predictions.copy()
 
-        rows = len(labels)
+        rows = len(LABELS)
         cols = np.shape(predictions)[1]
         pred = predictions[:, -1].tolist()
 
@@ -281,7 +281,7 @@ def update():
         # Update last detection plot data
         DETECTION.data = dict(
             pos=np.arange(0, rows, 1)[::-1] + 1,  # in reversed order
-            label=labels,
+            label=LABELS,
             value=pred,
             pretty_value=[str(to_percentage(v)) + '%' for v in pred],
             color=[colorizer(v, True, threshold=threshold.value) for v in pred]
@@ -304,7 +304,7 @@ def update():
 
         for r in range(rows):
             for c in range(cols):
-                data['label'].append(labels[r])
+                data['label'].append(LABELS[r])
                 data['x'].append(0.5 + c - cols)
                 data['y'].append(rows - r)  # inverted order
                 data['value'].append(predictions[r, c])
