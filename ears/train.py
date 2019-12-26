@@ -24,13 +24,16 @@ from tqdm import tqdm
 THEANO_FLAGS = ('device=gpu0,'
                 'floatX=float32,'
                 'dnn.conv.algo_bwd_filter=deterministic,'
-                'dnn.conv.algo_bwd_data=deterministic')
+                'dnn.conv.algo_bwd_data=deterministic,'
+                 'contexts=dev0->cuda0')
 
 os.environ['THEANO_FLAGS'] = THEANO_FLAGS
 os.environ['KERAS_BACKEND'] = 'theano'
 
-keras.backend.set_image_dim_ordering('th')
-
+#keras.backend.set_image_dim_ordering('th')
+#NEW
+import tensorflow as tf
+#END NEW
 
 
 
@@ -97,7 +100,9 @@ if __name__ == '__main__':
     labels = pd.unique(meta.sort_values('category')['category'])
     le = sklearn.preprocessing.LabelEncoder()
     le.fit(labels)
-
+    # NEW
+    
+    #END NEW
     # Generate spectrograms
     logger.info('Generating spectrograms...')
 
@@ -162,6 +167,21 @@ if __name__ == '__main__':
 
     logger.info('Training... (batch size of {} | {} batches per epoch)'.format(batch_size, bpe))
 
+#new
+#    checkpoint_path = "training_1/cp.ckpt"
+#    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+# Создаем коллбек сохраняющий веса модели
+#    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+ #                                                    save_weights_only=True,
+  #                                                   verbose=1)
+    #https://stackoverflow.com/questions/41265035/tensorflow-why-there-are-3-files-after-saving-the-model
+#https://www.tensorflow.org/tutorials/keras/save_and_load?hl=ru
+    saver = tf.train.Saver()
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
+    saver.save(sess, 'checkpoint_dir/my_test_model')
+#end new
     model.fit_generator(generator=iterbatches(batch_size, meta),
                         steps_per_epoch=bpe,
                         epochs=epochs)
